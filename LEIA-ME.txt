@@ -1,0 +1,14 @@
+CriptoSim — arquivos do app
+
+O que tem:
+- Cotações em reais para BTC, ETH, SOL, BNB, XRP, DOGE e ADA.
+- Atualização automática a cada 60 segundos enquanto o app estiver aberto.
+- Compra e venda fictícias.
+- Saldo inicial simulado de R$ 10.000.
+- Carteira e histórico salvos no navegador/aparelho.
+
+IMPORTANTE:
+1. O index.html pode ser aberto no navegador para testar, mas instalação PWA e modo offline exigem hospedagem HTTPS.
+2. Para instalar no Android: hospede estes arquivos em um site HTTPS; abra o endereço no Chrome; menu ⋮ > Instalar app ou Adicionar à tela inicial.
+3. As cotações dependem da API pública CoinGecko e da internet. A API pode limitar solicitações.
+4. Não é uma corretora e não movimenta dinheiro real.

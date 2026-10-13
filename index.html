@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#102a43">
+<meta name="description" content="Simulador de criptomoedas com cotações, compras fictícias e histórico salvo no aparelho.">
+<link rel="manifest" href="manifest.json">
+<title>CriptoSim — Simulador</title>
+<style>
+:root{--bg:#f2f5f9;--card:#fff;--ink:#142235;--muted:#63748a;--blue:#1769e0;--green:#087f5b;--red:#c92a2a;--line:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:linear-gradient(135deg,#102a43,#1769e0);color:white;padding:22px 16px 28px;border-radius:0 0 24px 24px}
+header h1{margin:0;font-size:25px}header p{margin:6px 0 0;color:#dbeafe;font-size:13px}
+main{max-width:850px;margin:auto;padding:14px;display:grid;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 14px #102a430a}
+h2{font-size:17px;margin:0 0 12px}.muted{color:var(--muted);font-size:12px}
+.summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:-4px}
+.metric{background:#fff;border-radius:14px;padding:14px;border:1px solid var(--line)}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{display:block;font-size:20px;margin-top:5px;overflow-wrap:anywhere}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}label{font-size:12px;color:var(--muted);display:block;margin-bottom:5px}input,select,button{font:inherit;width:100%;border-radius:10px;padding:11px;border:1px solid #cbd5e1;background:white;color:var(--ink)}button{border:0;background:var(--blue);color:white;font-weight:700;cursor:pointer}button.secondary{background:#e8effa;color:#174a8b}button.danger{background:#fff0f0;color:var(--red);border:1px solid #ffd1d1}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.coin{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.coin:last-child{border-bottom:0}.coinname{font-weight:700}.coinname small{display:block;color:var(--muted);font-weight:400;font-size:12px}.price{text-align:right;font-weight:700}.change{font-size:12px;text-align:right}.positive{color:var(--green)}.negative{color:var(--red)}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted);font-weight:600}td:last-child,th:last-child{text-align:right}
+.notice{background:#fff8db;border:1px solid #f4df8a;color:#6b5300;padding:11px 12px;border-radius:12px;font-size:12px;line-height:1.45}
+footer{text-align:center;padding:0 16px 24px;color:var(--muted);font-size:11px}
+@media(min-width:680px){main{grid-template-columns:1fr 1fr}.wide{grid-column:1/-1}.summary{grid-column:1/-1}.controls{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><h1>₿ CriptoSim</h1><p>Simule compras e vendas, acompanhe cotações e mantenha seu histórico.</p></header>
+<main>
+<section class="summary">
+ <div class="metric"><span>Saldo disponível (simulado)</span><strong id="cash">R$ 10.000,00</strong></div>
+ <div class="metric"><span>Valor da carteira</span><strong id="portfolio">R$ 0,00</strong></div>
+ <div class="metric"><span>Total investido em compras</span><strong id="invested">R$ 0,00</strong></div>
+ <div class="metric"><span>Resultado estimado</span><strong id="profit">R$ 0,00</strong></div>
+</section>
+<section class="card">
+<h2>Cotações de criptomoedas</h2>
+<div class="muted" id="updated">Carregando cotações…</div>
+<div id="prices"></div>
+<button class="secondary" style="margin-top:10px" id="refresh">Atualizar preços</button>
+<p class="muted">Preços de mercado em BRL quando a conexão estiver disponível.</p>
+</section>
+<section class="card">
+<h2>Simular uma operação</h2>
+<div class="controls">
+ <div><label for="coin">Criptomoeda</label><select id="coin"><option value="bitcoin">Bitcoin (BTC)</option><option value="ethereum">Ethereum (ETH)</option><option value="solana">Solana (SOL)</option><option value="binancecoin">BNB</option><option value="ripple">XRP</option><option value="dogecoin">Dogecoin (DOGE)</option><option value="cardano">Cardano (ADA)</option></select></div>
+ <div><label for="amount">Valor em reais (R$)</label><input id="amount" type="number" min="0.01" step="0.01" value="100"></div>
+</div>
+<div class="actions"><button id="buy">Simular compra</button><button id="sell" class="secondary">Simular venda</button></div>
+<p class="muted">Operações fictícias: nenhum dinheiro real é movimentado.</p>
+</section>
+<section class="card">
+<h2>Minha carteira</h2>
+<div id="holdings" class="muted">Você ainda não tem criptomoedas simuladas.</div>
+</section>
+<section class="card wide">
+<h2>Histórico de operações</h2>
+<div class="tablewrap"><table><thead><tr><th>Data e hora</th><th>Operação</th><th>Cripto</th><th>Valor</th><th>Quantidade</th></tr></thead><tbody id="history"></tbody></table></div>
+<button class="danger" id="clear" style="margin-top:12px">Apagar simulação e reiniciar</button>
+</section>
+<section class="notice wide">Este aplicativo é apenas um simulador educativo, não uma corretora e não oferece recomendação financeira. As cotações podem atrasar ou ficar indisponíveis. Os dados da carteira e do histórico ficam salvos localmente neste aparelho/navegador.</section>
+</main>
+<footer>CriptoSim • Simulação, não investimento real.</footer>
+<script>
+const COINS = {
+ bitcoin:{name:"Bitcoin",symbol:"BTC"}, ethereum:{name:"Ethereum",symbol:"ETH"},
+ solana:{name:"Solana",symbol:"SOL"}, binancecoin:{name:"BNB",symbol:"BNB"},
+ ripple:{name:"XRP",symbol:"XRP"}, dogecoin:{name:"Dogecoin",symbol:"DOGE"},
+ cardano:{name:"Cardano",symbol:"ADA"}
+};
+const KEY="criptosim-v1";
+let prices={}, state;
+function fresh(){return {cash:10000,holdings:{},invested:0,history:[]}}
+try{state=JSON.parse(localStorage.getItem(KEY))||fresh()}catch(e){state=fresh()}
+const brl=n=>Number(n||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const num=n=>Number(n||0).toLocaleString("pt-BR",{maximumFractionDigits:8});
+function save(){localStorage.setItem(KEY,JSON.stringify(state));render()}
+function render(){
+ document.getElementById("cash").textContent=brl(state.cash);
+ let value=0; Object.keys(state.holdings).forEach(id=>value+=(state.holdings[id]||0)*(prices[id]?.brl||0));
+ document.getElementById("portfolio").textContent=brl(value);
+ document.getElementById("invested").textContent=brl(state.invested);
+ const profit=value+state.cash-10000;
+ const p=document.getElementById("profit");p.textContent=brl(profit);p.className=profit>=0?"positive":"negative";
+ const holdings=document.getElementById("holdings");
+ const rows=Object.keys(COINS).filter(id=>(state.holdings[id]||0)>0);
+ holdings.innerHTML=rows.length?rows.map(id=>`<div class="coin"><div class="coinname">${COINS[id].name} <small>${COINS[id].symbol} • ${num(state.holdings[id])} unidades</small></div><div class="price">${brl((state.holdings[id]||0)*(prices[id]?.brl||0))}</div></div>`).join(""):"Você ainda não tem criptomoedas simuladas.";
+ document.getElementById("history").innerHTML=state.history.length?state.history.slice().reverse().map(h=>`<tr><td>${h.date}</td><td class="${h.type==='Compra'?'negative':'positive'}">${h.type}</td><td>${h.symbol}</td><td>${brl(h.value)}</td><td>${num(h.qty)}</td></tr>`).join(""):'<tr><td colspan="5">Nenhuma operação ainda.</td></tr>';
+}
+function renderPrices(){
+ const el=document.getElementById("prices");
+ if(!Object.keys(prices).length){el.innerHTML='<p class="muted">Não foi possível carregar as cotações. Confira a internet e tente novamente.</p>';return}
+ el.innerHTML=Object.keys(COINS).map(id=>{let p=prices[id]||{};let ch=p.change||0;return `<div class="coin"><div class="coinname">${COINS[id].name}<small>${COINS[id].symbol}</small></div><div><div class="price">${brl(p.brl)}</div><div class="change ${ch>=0?'positive':'negative'}">${ch>=0?'+':''}${Number(ch).toLocaleString('pt-BR',{maximumFractionDigits:2})}% (24h)</div></div></div>`}).join("");
+}
+async function refresh(){
+ document.getElementById("updated").textContent="Atualizando cotações…";
+ try{
+  const ids=Object.keys(COINS).join(",");
+  const res=await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=brl&include_24hr_change=true`,{cache:"no-store"});
+  if(!res.ok) throw new Error("API");
+  const data=await res.json();
+  for(const id of Object.keys(COINS)) if(data[id]) prices[id]={brl:data[id].brl||0,change:data[id].brl_24h_change||0};
+  renderPrices();render();
+  document.getElementById("updated").textContent="Última atualização: "+new Date().toLocaleString("pt-BR");
+ }catch(e){document.getElementById("updated").textContent="Cotação indisponível no momento. Tente novamente.";renderPrices()}
+}
+function trade(type){
+ const id=document.getElementById("coin").value, value=Number(document.getElementById("amount").value), price=prices[id]?.brl;
+ if(!price){alert("A cotação ainda não está disponível. Atualize os preços primeiro.");return}
+ if(!Number.isFinite(value)||value<=0){alert("Digite um valor válido.");return}
+ const qty=value/price;
+ if(type==="Compra"){
+  if(value>state.cash){alert("Saldo simulado insuficiente.");return}
+  state.cash-=value;state.holdings[id]=(state.holdings[id]||0)+qty;state.invested+=value;
+ }else{
+  const owned=state.holdings[id]||0, sellQty=value/price;
+  if(owned<=0){alert("Você não possui essa criptomoeda na carteira simulada.");return}
+  if(sellQty>owned){alert("Você não tem quantidade suficiente para vender esse valor.");return}
+  state.holdings[id]=owned-sellQty;state.cash+=value;
+ }
+ state.history.push({date:new Date().toLocaleString("pt-BR"),type,symbol:COINS[id].symbol,value,qty:type==="Compra"?qty:qty});
+ save();
+}
+document.getElementById("refresh").addEventListener("click",refresh);
+document.getElementById("buy").addEventListener("click",()=>trade("Compra"));
+document.getElementById("sell").addEventListener("click",()=>trade("Venda"));
+document.getElementById("clear").addEventListener("click",()=>{if(confirm("Apagar todo o histórico e reiniciar o saldo para R$ 10.000?")){state=fresh();save()}});
+render();refresh();setInterval(refresh,60000);
+if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+</script>
+</body>
+</html>

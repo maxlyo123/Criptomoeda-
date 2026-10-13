@@ -1,0 +1,12 @@
+{
+  "name": "CriptoSim — Simulador de Criptomoedas",
+  "short_name": "CriptoSim",
+  "description": "Simulador de cotações e operações fictícias de criptomoedas.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f2f5f9",
+  "theme_color": "#102a43",
+  "icons": []
+}
